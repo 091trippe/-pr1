@@ -1,0 +1,462 @@
+from abc import ABC, abstractmethod
+from copy import deepcopy
+
+
+
+# БАЗОВИЙ АБСТРАКТНИЙ КЛАС
+
+
+class FileSystemObject(ABC):
+
+    def __init__(self, name, size=0):
+        self.__name = name
+        self.__size = size
+
+ 
+    # ІНКАПСУЛЯЦІЯ
+
+
+    @property
+    def name(self):
+        return self.__name
+
+    @name.setter
+    def name(self, value):
+        self.__name = value
+
+    @property
+    def size(self):
+        return self.__size
+
+    @size.setter
+    def size(self, value):
+        self.__size = value
+
+   
+    # ОСНОВНІ МЕТОДИ
+
+
+    def rename(self, new_name):
+        self.name = new_name
+
+    def copy(self):
+        return deepcopy(self)
+
+    @abstractmethod
+    def get_info(self):
+        pass
+
+
+# КЛАС FILE
+
+
+class File(FileSystemObject):
+
+    def __init__(self, name, content=""):
+        super().__init__(name, len(content))
+
+        self.__content = content
+
+    # PROPERTY
+
+
+    @property
+    def content(self):
+        return self.__content
+
+    @content.setter
+    def content(self, value):
+        self.__content = value
+        self.size = len(value)
+
+ 
+    # READ / WRITE
+
+    def read(self):
+        return self.__content
+
+    def write(self, text):
+        self.__content += text
+        self.size = len(self.__content)
+
+    # INFO
+ 
+    def get_info(self):
+        return f"Файл: {self.name} | Розмір: {self.size} Б"
+
+
+
+# КЛАС FOLDER
+
+class Folder(FileSystemObject):
+
+    def __init__(self, name):
+        super().__init__(name)
+
+        self.__objects = []
+
+    @property
+    def objects(self):
+        return self.__objects
+
+  
+    # ДОДАВАННЯ ОБ'ЄКТА
+  
+
+    def add_object(self, obj):
+
+        for existing in self.__objects:
+
+            if existing.name == obj.name:
+                raise Exception(
+                    "Об'єкт з такою назвою вже існує"
+                )
+
+        self.__objects.append(obj)
+
+ 
+    # ВИДАЛЕННЯ ОБ'ЄКТА
+
+    def remove_object(self, name):
+
+        for obj in self.__objects:
+
+            if obj.name == name:
+                self.__objects.remove(obj)
+                return
+
+        raise Exception("Об'єкт не знайдено")
+
+    # ПОШУК
+
+
+    def find_object(self, name):
+
+        result = []
+
+        for obj in self.__objects:
+
+            # повний або частковий пошук
+            if name.lower() in obj.name.lower():
+                result.append(obj)
+
+            # рекурсивний пошук у папках
+            if isinstance(obj, Folder):
+                result.extend(obj.find_object(name))
+
+        return result
+
+    # РОЗМІР ПАПКИ
+
+
+    def calculate_size(self):
+
+        total = 0
+
+        for obj in self.__objects:
+
+            if isinstance(obj, Folder):
+                total += obj.calculate_size()
+            else:
+                total += obj.size
+
+        return total
+
+
+    # ПЕРЕГЛЯД ВМІСТУ
+
+    def show_contents(self):
+
+        if not self.__objects:
+            print("Папка порожня")
+            return
+
+        for obj in self.__objects:
+            print(obj.get_info())
+
+    # INFO
+  
+
+    def get_info(self):
+
+        return (
+            f"Папка: {self.name} | "
+            f"Об'єктів: {len(self.__objects)} | "
+            f"Розмір: {self.calculate_size()} Б"
+        )
+
+
+
+# FILE MANAGER
+
+
+class FileManager:
+
+    def __init__(self):
+
+        self.root = Folder("root")
+
+  
+    # СТВОРЕННЯ ФАЙЛУ
+
+
+    def create_file(self, folder, name, content=""):
+
+        file = File(name, content)
+
+        folder.add_object(file)
+
+    # СТВОРЕННЯ ПАПКИ
+
+
+    def create_folder(self, parent, name):
+
+        folder = Folder(name)
+
+        parent.add_object(folder)
+
+    # ПОШУК
+  
+    def search(self, folder, name):
+
+        result = folder.find_object(name)
+
+        if not result:
+            print("Нічого не знайдено")
+            return
+
+        print("\nРезультати пошуку:")
+
+        for obj in result:
+            print(obj.get_info())
+
+
+    # ПЕРЕЙМЕНУВАННЯ
+ 
+    def rename_object(self, obj, new_name):
+
+        obj.rename(new_name)
+
+
+    # КОПІЮВАННЯ
+
+
+    def copy_object(self, obj, target_folder):
+
+        target_folder.add_object(obj.copy())
+
+
+    # ПЕРЕМІЩЕННЯ
+
+    def move_object(self,
+                    source_folder,
+                    target_folder,
+                    object_name):
+
+        if source_folder == target_folder:
+            raise Exception(
+                "Не можна перемістити папку в саму себе"
+            )
+
+        for obj in source_folder.objects:
+
+            if obj.name == object_name:
+
+                target_folder.add_object(obj)
+
+                source_folder.remove_object(object_name)
+
+                return
+
+        raise Exception("Об'єкт не знайдено")
+
+
+# КОНСОЛЬНЕ МЕНЮ
+
+manager = FileManager()
+
+current_folder = manager.root
+
+while True:
+
+    print("\n========== FILE MANAGER ==========")
+
+    print("1. Створити файл")
+    print("2. Створити папку")
+    print("3. Переглянути вміст")
+    print("4. Пошук")
+    print("5. Перейменувати")
+    print("6. Видалити")
+    print("7. Запис у файл")
+    print("8. Читати файл")
+    print("9. Розмір папки")
+    print("0. Вихід")
+
+    choice = input("Ваш вибір: ")
+
+    try:
+
+     
+        # СТВОРИТИ ФАЙЛ
+        
+
+        if choice == "1":
+
+            name = input("Назва файлу: ")
+
+            content = input("Вміст файлу: ")
+
+            manager.create_file(
+                current_folder,
+                name,
+                content
+            )
+
+            print("Файл створено")
+
+ 
+        # СТВОРИТИ ПАПКУ
+
+        elif choice == "2":
+
+            name = input("Назва папки: ")
+
+            manager.create_folder(
+                current_folder,
+                name
+            )
+
+            print("Папку створено")
+
+  
+        # ПЕРЕГЛЯД ВМІСТУ
+    
+
+        elif choice == "3":
+
+            current_folder.show_contents()
+
+
+        # ПОШУК
+     
+
+        elif choice == "4":
+
+            name = input("Введіть назву: ")
+
+            manager.search(current_folder, name)
+
+
+        # ПЕРЕЙМЕНУВАННЯ
+
+
+        elif choice == "5":
+
+            old_name = input("Стара назва: ")
+
+            new_name = input("Нова назва: ")
+
+            found = False
+
+            for obj in current_folder.objects:
+
+                if obj.name == old_name:
+
+                    manager.rename_object(
+                        obj,
+                        new_name
+                    )
+
+                    print("Перейменовано")
+
+                    found = True
+
+            if not found:
+                print("Об'єкт не знайдено")
+
+
+        # ВИДАЛЕННЯ
+
+        elif choice == "6":
+
+            name = input("Назва об'єкта: ")
+
+            current_folder.remove_object(name)
+
+            print("Об'єкт видалено")
+
+        # ЗАПИС У ФАЙЛ
+
+
+        elif choice == "7":
+
+            name = input("Назва файлу: ")
+
+            text = input("Текст: ")
+
+            found = False
+
+            for obj in current_folder.objects:
+
+                if isinstance(obj, File) and obj.name == name:
+
+                    obj.write(text)
+
+                    print("Дані записано")
+
+                    found = True
+
+            if not found:
+                print("Файл не знайдено")
+
+
+        # ЧИТАННЯ ФАЙЛУ
+
+        elif choice == "8":
+
+            name = input("Назва файлу: ")
+
+            found = False
+
+            for obj in current_folder.objects:
+
+                if isinstance(obj, File) and obj.name == name:
+
+                    print("\nВміст файлу:")
+                    print(obj.read())
+
+                    found = True
+
+            if not found:
+                print("Файл не знайдено")
+
+
+        # РОЗМІР ПАПКИ
+
+
+        elif choice == "9":
+
+            print(
+                f"Розмір папки: "
+                f"{current_folder.calculate_size()} Б"
+            )
+
+      
+        # ВИХІД
+
+        elif choice == "0":
+
+            print("Вихід з програми")
+            break
+
+        else:
+            print("Невірний вибір")
+
+
+    # ОБРОБКА ПОМИЛОК
+
+
+    except Exception as error:
+
+        print("Помилка:", error)
+
