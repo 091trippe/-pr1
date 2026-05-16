@@ -1,0 +1,80 @@
+class FuelStation:
+    def __init__(self, max_volume, fuel_balance, fuel_price):
+        self.max_volume = max_volume              # максимальний об'єм
+        self.fuel_balance = fuel_balance          # залишок пального
+        self.cars_served = 0                      # кількість заправлених авто
+        self.fuel_price = fuel_price              # ціна за 1 літр
+        self.money_earned = 0                     # зароблені кошти
+        self.fuel_sold = 0                        # реалізоване пальне
+
+    # Конструктор копіювання
+    @classmethod
+    def copy(cls, other):
+        new_obj = cls(
+            other.max_volume,
+            other.fuel_balance,
+            other.fuel_price
+        )
+        new_obj.cars_served = other.cars_served
+        new_obj.money_earned = other.money_earned
+        new_obj.fuel_sold = other.fuel_sold
+        return new_obj
+
+    # Заправка авто
+    def refuel_car(self, liters):
+        if liters <= 0:
+            print("Некоректна кількість пального!")
+            return
+
+        if liters > self.fuel_balance:
+            print("Недостатньо пального в колонці!")
+            return
+
+        cost = liters * self.fuel_price
+
+        self.fuel_balance -= liters
+        self.cars_served += 1
+        self.money_earned += cost
+        self.fuel_sold += liters
+
+        print(f"Авто заправлено на {liters} л.")
+        print(f"До сплати: {cost} грн.")
+
+    # Поповнення запасу пального
+    def refill_station(self, liters):
+        if liters <= 0:
+            print("Некоректна кількість пального!")
+            return
+
+        if self.fuel_balance + liters > self.max_volume:
+            print("Неможливо поповнити: перевищення максимального об'єму!")
+            return
+
+        self.fuel_balance += liters
+        print(f"Колонку поповнено на {liters} л.")
+
+    # Виведення статистики
+    def show_statistics(self):
+        print("\n===== Статистика =====")
+        print(f"Зароблено коштів: {self.money_earned} грн")
+        print(f"Реалізовано пального: {self.fuel_sold} л")
+        print(f"Кількість заправлених авто: {self.cars_served}")
+        print(f"Залишок пального: {self.fuel_balance} л")
+
+
+# ---------------- Головна програма ----------------
+
+station = FuelStation(1000, 500, 55)
+
+station.refuel_car(40)
+station.refuel_car(60)
+
+station.refill_station(200)
+
+station.show_statistics()
+
+# Перевірка конструктора копіювання
+copy_station = FuelStation.copy(station)
+
+print("\n===== Дані копії =====")
+copy_station.show_statistics()
