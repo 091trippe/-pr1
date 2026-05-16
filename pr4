@@ -1,1 +1,334 @@
 
+
+# БАЗОВИЙ КЛАС
+
+
+class Device:
+    def __init__(self):
+        print("Device initialized")
+
+    def __del__(self):
+        print("Device destroyed")
+
+
+
+# КЛАС Camera
+
+
+class Camera(Device):
+    def __init__(self):
+        print("Camera initialized")
+        super().__init__()
+
+    def __del__(self):
+        print("Camera destroyed")
+        super().__del__()
+
+
+
+# КЛАС Microphone
+
+
+class Microphone(Device):
+    def __init__(self):
+        print("Microphone initialized")
+        super().__init__()
+
+    def __del__(self):
+        print("Microphone destroyed")
+        super().__del__()
+
+
+
+# КЛАС Speaker
+
+class Speaker(Device):
+    def __init__(self):
+        print("Speaker initialized")
+        super().__init__()
+
+    def __del__(self):
+        print("Speaker destroyed")
+        super().__del__()
+
+
+# ПРОМІЖНИЙ КЛАС VoiceModule
+
+
+class VoiceModule(Microphone, Speaker):
+    def __init__(self):
+        print("VoiceModule initialized")
+        super().__init__()
+
+    def __del__(self):
+        print("VoiceModule destroyed")
+        super().__del__()
+
+
+# ФІНАЛЬНИЙ КЛАС SmartAssistant
+
+class SmartAssistant(Camera, VoiceModule):
+    def __init__(self):
+        print("SmartAssistant initialized")
+        super().__init__()
+
+    def __del__(self):
+        print("SmartAssistant destroyed")
+        super().__del__()
+
+
+# ГОЛОВНА ЧАСТИНА ПРОГРАМИ
+
+print("===== СТВОРЕННЯ ОБ'ЄКТА =====")
+
+assistant = SmartAssistant()
+
+print("\n===== MRO =====")
+print(SmartAssistant.__mro__)
+
+print("\n===== ВИДАЛЕННЯ ОБ'ЄКТА =====")
+
+del assistant
+
+
+# РЕЗУЛЬТАТ РОБОТИ ПРОГРАМИ
+
+"""
+ТОЧНИЙ ПОРЯДОК ВИКЛИКУ КОНСТРУКТОРІВ:
+
+SmartAssistant initialized
+Camera initialized
+VoiceModule initialized
+Microphone initialized
+Speaker initialized
+Device initialized
+
+
+ПОЯСНЕННЯ:
+
+1. Створення починається з SmartAssistant.
+
+2. SmartAssistant викликає super().__init__(),
+   тому Python переходить до наступного класу в MRO.
+
+3. Далі:
+   Camera
+
+4. Потім:
+   VoiceModule
+
+5. Потім:
+   Microphone
+
+6. Потім:
+   Speaker
+
+7. І в кінці:
+   Device
+
+
+Кожен клас викликає super(),
+тому Python проходить весь ланцюжок MRO.
+"""
+
+
+# ПОЯСНЕННЯ MRO
+"""
+MRO (Method Resolution Order) визначає,
+в якому порядку Python шукає методи.
+
+MRO для SmartAssistant:
+
+(
+SmartAssistant,
+Camera,
+VoiceModule,
+Microphone,
+Speaker,
+Device,
+object
+)
+
+
+Саме тому виклики йдуть у такому порядку.
+
+
+ВАЖЛИВО:
+
+super() НЕ означає:
+"викликати батьківський клас".
+
+super() означає:
+"викликати НАСТУПНИЙ клас у MRO".
+"""
+
+
+# ПОРЯДОК ВИКЛИКУ ДЕСТРУКТОРІВ
+
+"""
+ТОЧНИЙ ПОРЯДОК ВИКЛИКУ ДЕСТРУКТОРІВ:
+
+SmartAssistant destroyed
+Camera destroyed
+VoiceModule destroyed
+Microphone destroyed
+Speaker destroyed
+Device destroyed
+
+
+ПОЯСНЕННЯ:
+
+Деструктори також використовують super().
+
+Тому Python проходить по тому самому MRO.
+
+
+Кожен __del__():
+1. друкує повідомлення
+2. викликає super().__del__()
+
+Через це формується ланцюжок викликів.
+"""
+
+
+# ЕКСПЕРИМЕНТ:
+# ЛАМАЄМО MRO
+
+print("\n\n===== ЕКСПЕРИМЕНТ: ЛОМАНИЙ MRO =====")
+
+
+# НОВІ КЛАСИ
+
+class Device2:
+    def __init__(self):
+        print("Device initialized")
+
+    def __del__(self):
+        print("Device destroyed")
+
+
+class Camera2(Device2):
+    def __init__(self):
+        print("Camera initialized")
+        super().__init__()
+
+    def __del__(self):
+        print("Camera destroyed")
+        super().__del__()
+
+# ТУТ НАВМИСНО ЛАМАЄМО ЛАНЦЮЖОК
+
+class Microphone2(Device2):
+    def __init__(self):
+        print("Microphone initialized")
+
+        # ПРЯМИЙ виклик
+        Device2.__init__(self)
+
+    def __del__(self):
+        print("Microphone destroyed")
+
+        # ПРЯМИЙ виклик
+        Device2.__del__(self)
+
+
+class Speaker2(Device2):
+    def __init__(self):
+        print("Speaker initialized")
+        super().__init__()
+
+    def __del__(self):
+        print("Speaker destroyed")
+        super().__del__()
+
+
+class VoiceModule2(Microphone2, Speaker2):
+    def __init__(self):
+        print("VoiceModule initialized")
+        super().__init__()
+
+    def __del__(self):
+        print("VoiceModule destroyed")
+        super().__del__()
+
+
+class SmartAssistant2(Camera2, VoiceModule2):
+    def __init__(self):
+        print("SmartAssistant initialized")
+        super().__init__()
+
+    def __del__(self):
+        print("SmartAssistant destroyed")
+        super().__del__()
+
+
+print("\n===== СТВОРЕННЯ ОБ'ЄКТА =====")
+
+assistant2 = SmartAssistant2()
+
+print("\n===== MRO =====")
+print(SmartAssistant2.__mro__)
+
+print("\n===== ВИДАЛЕННЯ ОБ'ЄКТА =====")
+
+del assistant2
+
+
+# АНАЛІЗ ПОМИЛКИ
+
+
+"""
+РЕЗУЛЬТАТ КОНСТРУКТОРІВ:
+
+SmartAssistant initialized
+Camera initialized
+VoiceModule initialized
+Microphone initialized
+Device initialized
+
+
+ЩО ПРОПАЛО?
+
+Speaker initialized
+
+
+ЧОМУ?
+
+Тому що Microphone2 більше НЕ викликає super().
+
+Замість цього він напряму викликає:
+Device2.__init__(self)
+
+
+Через це Python:
+- НЕ переходить до Speaker2
+- MRO-ланцюжок обривається
+
+
+АНАЛОГІЧНО ДЛЯ ДЕСТРУКТОРІВ:
+
+SmartAssistant destroyed
+Camera destroyed
+VoiceModule destroyed
+Microphone destroyed
+Device destroyed
+
+
+ЗНОВУ ПРОПАЛО:
+
+Speaker destroyed
+
+
+ГОЛОВНА ПРОБЛЕМА:
+
+При множинному спадкуванні
+НЕ МОЖНА напряму викликати:
+
+BaseClass.method(self)
+
+Тому що це:
+- ламає MRO
+- пропускає інші класи
+- створює дублікати викликів
+- порушує логіку програми
+
