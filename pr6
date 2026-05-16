@@ -1,0 +1,96 @@
+from abc import ABC, abstractmethod
+
+
+# ІНТЕРФЕЙС Notifier
+
+
+class Notifier(ABC):
+
+    @abstractmethod
+    def send(self, message):
+        pass
+
+
+
+# EmailNotifier
+
+
+class EmailNotifier(Notifier):
+
+    def __init__(self, email):
+        self.email = email
+
+    def send(self, message):
+        print(f"[EMAIL] Повідомлення '{message}' "
+              f"надіслано на email: {self.email}")
+
+
+
+# SMSNotifier
+
+class SMSNotifier(Notifier):
+
+    def __init__(self, phone):
+        self.phone = phone
+
+    def send(self, message):
+        print(f"[SMS] Повідомлення '{message}' "
+              f"надіслано на номер: {self.phone}")
+
+
+
+# TelegramNotifier
+
+
+class TelegramNotifier(Notifier):
+
+    def __init__(self, username):
+        self.username = username
+
+    def send(self, message):
+        print(f"[TELEGRAM] Повідомлення '{message}' "
+              f"надіслано користувачу: @{self.username}")
+
+
+
+# Менеджер сповіщень
+
+
+class NotificationManager:
+
+    def __init__(self, notifier: Notifier):
+        self.notifier = notifier
+
+    def notify(self, message):
+        self.notifier.send(message)
+
+
+# ГОЛОВНА ПРОГРАМА
+
+# Створення різних способів сповіщення
+email_notifier = EmailNotifier("user@gmail.com")
+
+sms_notifier = SMSNotifier("+380991112233")
+
+telegram_notifier = TelegramNotifier("my_telegram")
+
+
+# Один і той самий менеджер працює
+# з різними типами сповіщень
+
+
+print("===== EMAIL =====")
+
+manager = NotificationManager(email_notifier)
+manager.notify("Ваше замовлення підтверджено")
+
+print("\n===== SMS =====")
+
+manager = NotificationManager(sms_notifier)
+manager.notify("Код підтвердження: 4582")
+
+print("\n===== TELEGRAM =====")
+
+manager = NotificationManager(telegram_notifier)
+manager.notify("У вас нове повідомлення")
+
