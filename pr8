@@ -1,0 +1,434 @@
+from abc import ABC, abstractmethod
+from copy import deepcopy
+from datetime import datetime
+
+
+
+# АБСТРАКТНИЙ БАЗОВИЙ КЛАС
+
+
+class FileSystemObject(ABC):
+
+    def __init__(self, name, path, size):
+        self.__name = name
+        self.__path = path
+        self.__size = size
+        self.__created_date = datetime.now()
+
+
+    # ІНКАПСУЛЯЦІЯ
+
+
+    @property
+    def name(self):
+        return self.__name
+
+    @name.setter
+    def name(self, value):
+        self.__name = value
+
+    @property
+    def path(self):
+        return self.__path
+
+    @path.setter
+    def path(self, value):
+        self.__path = value
+
+    @property
+    def size(self):
+        return self.__size
+
+    @size.setter
+    def size(self, value):
+        self.__size = value
+
+    @property
+    def created_date(self):
+        return self.__created_date
+
+
+    # МЕТОДИ
+
+
+    def rename(self, new_name):
+        print(f"Об'єкт {self.name} перейменовано у {new_name}")
+        self.name = new_name
+
+    def delete(self):
+        print(f"Об'єкт {self.name} видалено")
+
+    def copy(self):
+        print(f"Створено копію об'єкта {self.name}")
+        return deepcopy(self)
+
+
+    # АБСТРАКТНИЙ МЕТОД
+
+
+    @abstractmethod
+    def get_info(self):
+        pass
+
+
+
+# КЛАС FILE
+
+
+class File(FileSystemObject):
+
+    def __init__(self, name, path, size, extension):
+        super().__init__(name, path, size)
+
+        self.__extension = extension
+
+    @property
+    def extension(self):
+        return self.__extension
+
+    def get_info(self):
+        return (
+            f"Файл: {self.name} | "
+            f"Розширення: {self.extension} | "
+            f"Розмір: {self.size} КБ"
+        )
+
+
+
+# TEXT FILE
+
+
+class TextFile(File):
+
+    def __init__(self, name, path,
+                 size, extension, content):
+
+        super().__init__(name, path, size, extension)
+
+        self.__content = content
+
+    @property
+    def content(self):
+        return self.__content
+
+    def get_info(self):
+        return (
+            f"Текстовий файл: {self.name} | "
+            f"Вміст: {self.content}"
+        )
+
+
+
+# IMAGE FILE
+
+class ImageFile(File):
+
+    def __init__(self, name, path,
+                 size, extension,
+                 width, height):
+
+        super().__init__(name, path, size, extension)
+
+        self.__width = width
+        self.__height = height
+
+    def get_info(self):
+        return (
+            f"Графічний файл: {self.name} | "
+            f"Роздільна здатність: "
+            f"{self.__width}x{self.__height}"
+        )
+
+
+
+# FOLDER
+
+
+class Folder(FileSystemObject):
+
+    def __init__(self, name, path):
+        super().__init__(name, path, 0)
+
+        self.__objects = []
+
+    @property
+    def objects(self):
+        return self.__objects
+
+
+    # ДОДАВАННЯ ОБ'ЄКТА
+
+
+    def add_object(self, obj):
+
+        # перевірка однакових назв
+        for existing in self.__objects:
+            if existing.name == obj.name:
+                print(f"Помилка: об'єкт "
+                      f"'{obj.name}' вже існує")
+                return
+
+        self.__objects.append(obj)
+
+        print(f"Об'єкт '{obj.name}' "
+              f"додано у папку '{self.name}'")
+
+
+    # ВИДАЛЕННЯ ОБ'ЄКТА
+
+    def remove_object(self, name):
+
+        for obj in self.__objects:
+            if obj.name == name:
+                self.__objects.remove(obj)
+
+                print(f"Об'єкт '{name}' видалено")
+                return
+
+        print(f"Об'єкт '{name}' не знайдено")
+
+
+    # ПЕРЕГЛЯД ВМІСТУ
+ 
+
+    def show_contents(self):
+
+        print(f"\nВміст папки '{self.name}':")
+
+        if not self.__objects:
+            print("Папка порожня")
+            return
+
+        for obj in self.__objects:
+            print("-", obj.get_info())
+
+
+    # ІНФОРМАЦІЯ
+
+
+    def get_info(self):
+        return (
+            f"Папка: {self.name} | "
+            f"Кількість об'єктів: "
+            f"{len(self.__objects)}"
+        )
+
+
+# FILE MANAGER
+
+
+class FileManager:
+
+    def __init__(self):
+
+        # коренева папка
+        self.root = Folder("root", "/")
+
+    # СТВОРЕННЯ ПАПКИ
+
+
+    def create_folder(self, folder_name, parent_folder):
+
+        folder = Folder(folder_name, parent_folder.path)
+
+        parent_folder.add_object(folder)
+
+        return folder
+
+ 
+    # СТВОРЕННЯ ТЕКСТОВОГО ФАЙЛУ
+
+    def create_text_file(self,
+                         name,
+                         parent_folder,
+                         content):
+
+        file = TextFile(
+            name,
+            parent_folder.path,
+            10,
+            ".txt",
+            content
+        )
+
+        parent_folder.add_object(file)
+
+        return file
+
+ 
+    # СТВОРЕННЯ IMAGE FILE
+
+
+    def create_image_file(self,
+                          name,
+                          parent_folder):
+
+        image = ImageFile(
+            name,
+            parent_folder.path,
+            500,
+            ".png",
+            1920,
+            1080
+        )
+
+        parent_folder.add_object(image)
+
+        return image
+
+    # ВИДАЛЕННЯ
+
+
+    def delete_object(self, folder, object_name):
+
+        folder.remove_object(object_name)
+
+
+    # ПЕРЕЙМЕНУВАННЯ
+
+
+    def rename_object(self,
+                      obj,
+                      new_name):
+
+        obj.rename(new_name)
+
+    # КОПІЮВАННЯ
+
+
+    def copy_object(self,
+                    obj,
+                    target_folder):
+
+        copied = obj.copy()
+
+        target_folder.add_object(copied)
+
+
+    # ПЕРЕМІЩЕННЯ
+ 
+
+    def move_object(self,
+                    source_folder,
+                    target_folder,
+                    object_name):
+
+        # заборона переміщення папки в себе
+        if source_folder == target_folder:
+            print("Помилка: не можна "
+                  "перемістити папку в саму себе")
+            return
+
+        for obj in source_folder.objects:
+
+            if obj.name == object_name:
+
+                # перевірка дублювання
+                for existing in target_folder.objects:
+
+                    if existing.name == obj.name:
+                        print("Помилка: "
+                              "об'єкт з такою назвою "
+                              "вже існує")
+                        return
+
+                target_folder.add_object(obj)
+
+                source_folder.remove_object(object_name)
+
+                print(f"Об'єкт '{object_name}' "
+                      f"переміщено")
+
+                return
+
+        print(f"Об'єкт '{object_name}' не знайдено")
+
+
+
+# ГОЛОВНА ПРОГРАМА
+
+
+manager = FileManager()
+
+
+# СТВОРЕННЯ ПАПОК
+
+
+documents = manager.create_folder(
+    "Documents",
+    manager.root
+)
+
+images = manager.create_folder(
+    "Images",
+    manager.root
+)
+
+
+# СТВОРЕННЯ ФАЙЛІВ
+
+
+text1 = manager.create_text_file(
+    "notes.txt",
+    documents,
+    "Hello World"
+)
+
+image1 = manager.create_image_file(
+    "photo.png",
+    images
+)
+
+
+# ВИВІД ВМІСТУ
+
+
+manager.root.show_contents()
+
+documents.show_contents()
+
+images.show_contents()
+
+# ПЕРЕЙМЕНУВАННЯ
+
+manager.rename_object(
+    text1,
+    "new_notes.txt"
+)
+
+documents.show_contents()
+
+
+# КОПІЮВАННЯ
+
+
+manager.copy_object(
+    image1,
+    documents
+)
+
+documents.show_contents()
+
+# ПЕРЕМІЩЕННЯ
+
+
+manager.move_object(
+    documents,
+    images,
+    "new_notes.txt"
+)
+
+documents.show_contents()
+
+images.show_contents()
+
+
+# ВИДАЛЕННЯ
+
+manager.delete_object(
+    images,
+    "new_notes.txt"
+)
+
+images.show_contents()
+
