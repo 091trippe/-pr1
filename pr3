@@ -1,0 +1,284 @@
+class Core:
+    def boot(self):
+        print("Core boot")
+
+class PowerModule(Core):
+    def boot(self):
+        print("PowerModule boot")
+        super().boot()
+
+
+class SensorsModule(Core):
+    def boot(self):
+        print("SensorsModule boot")
+        super().boot()
+
+
+class CommsModule(Core):
+    def boot(self):
+        print("CommsModule boot")
+        super().boot()
+
+
+class LoggerModule(Core):
+    def boot(self):
+        print("LoggerModule boot")
+        super().boot()
+
+
+# =========================================================
+# ДОДАТКОВІ ПРОМІЖНІ КЛАСИ
+# =========================================================
+
+class SafetyModule(SensorsModule, LoggerModule):
+    def boot(self):
+        print("SafetyModule boot")
+        super().boot()
+
+
+class DiagnosticsModule(CommsModule, LoggerModule):
+    def boot(self):
+        print("DiagnosticsModule boot")
+        super().boot()
+
+
+# =========================================================
+# ФІНАЛЬНИЙ КЛАС
+# =========================================================
+
+class Robot(PowerModule, SafetyModule, DiagnosticsModule):
+    pass
+
+
+# =========================================================
+# ПУНКТ 1
+# Створення об'єкта і виклик boot()
+# =========================================================
+
+print("===== ПУНКТ 1 =====")
+
+r = Robot()
+r.boot()
+
+"""
+ТОЧНИЙ ПОРЯДОК ВИКЛИКІВ:
+
+PowerModule boot
+SafetyModule boot
+SensorsModule boot
+DiagnosticsModule boot
+CommsModule boot
+LoggerModule boot
+Core boot
+
+
+ПОЯСНЕННЯ:
+
+Python використовує MRO (Method Resolution Order).
+
+Кожен метод викликає super().boot(),
+тому Python переходить до НАСТУПНОГО класу в MRO.
+"""
+
+
+# =========================================================
+# ПУНКТ 2
+# Вивід MRO
+# =========================================================
+
+print("\n===== ПУНКТ 2 =====")
+
+print(Robot.__mro__)
+
+"""
+РЕЗУЛЬТАТ MRO:
+
+(
+Robot,
+PowerModule,
+SafetyModule,
+SensorsModule,
+DiagnosticsModule,
+CommsModule,
+LoggerModule,
+Core,
+object
+)
+
+ПОЯСНЕННЯ:
+
+1. Robot шукає метод boot().
+
+2. Перший клас:
+   PowerModule
+
+3. PowerModule викликає super():
+   → SafetyModule
+
+4. SafetyModule викликає super():
+   → SensorsModule
+
+5. SensorsModule викликає super():
+   → DiagnosticsModule
+
+6. DiagnosticsModule викликає super():
+   → CommsModule
+
+7. CommsModule викликає super():
+   → LoggerModule
+
+8. LoggerModule викликає super():
+   → Core
+
+9. Core завершує ланцюжок.
+
+
+Python будує MRO за алгоритмом C3 Linearization.
+Це потрібно для уникнення дублювання викликів.
+"""
+
+
+# =========================================================
+# ПУНКТ 3
+# Зміна LoggerModule.boot()
+# =========================================================
+
+print("\n===== ПУНКТ 3 =====")
+
+
+# НОВІ КЛАСИ ДЛЯ ДЕМОНСТРАЦІЇ
+
+class Core2:
+    def boot(self):
+        print("Core boot")
+
+
+class PowerModule2(Core2):
+    def boot(self):
+        print("PowerModule boot")
+        super().boot()
+
+
+class SensorsModule2(Core2):
+    def boot(self):
+        print("SensorsModule boot")
+        super().boot()
+
+
+class CommsModule2(Core2):
+    def boot(self):
+        print("CommsModule boot")
+        super().boot()
+
+
+class LoggerModule2(Core2):
+    def boot(self):
+        print("LoggerModule boot")
+
+        # ПРЯМИЙ виклик замість super()
+        Core2.boot(self)
+
+
+class SafetyModule2(SensorsModule2, LoggerModule2):
+    def boot(self):
+        print("SafetyModule boot")
+        super().boot()
+
+
+class DiagnosticsModule2(CommsModule2, LoggerModule2):
+    def boot(self):
+        print("DiagnosticsModule boot")
+        super().boot()
+
+
+class Robot2(PowerModule2, SafetyModule2, DiagnosticsModule2):
+    pass
+
+
+r2 = Robot2()
+r2.boot()
+
+"""
+РЕЗУЛЬТАТ:
+
+PowerModule boot
+SafetyModule boot
+SensorsModule boot
+DiagnosticsModule boot
+CommsModule boot
+LoggerModule boot
+Core boot
+
+
+ЩО ЗМІНИЛОСЬ?
+
+LoggerModule2 більше НЕ використовує super().
+
+Він напряму викликає:
+Core2.boot(self)
+
+Тобто ланцюжок MRO обривається.
+
+
+У НАШОМУ прикладі:
+після LoggerModule і так ішов Core,
+тому зовні результат не змінився.
+
+
+АЛЕ!
+
+У великих системах прямий виклик класу:
+Core.boot(self)
+
+може пропустити інші класи в MRO.
+
+
+Тому при множинному наслідуванні
+потрібно використовувати super().
+"""
+
+
+# =========================================================
+# ПУНКТ 4
+# Зміна порядку базових класів Robot
+# =========================================================
+
+print("\n===== ПУНКТ 4 =====")
+
+
+class Robot3(SafetyModule, PowerModule, DiagnosticsModule):
+    pass
+
+
+r3 = Robot3()
+r3.boot()
+
+print("\nMRO Robot3:")
+print(Robot3.__mro__)
+
+"""
+НОВИЙ ПОРЯДОК ВИКЛИКІВ:
+
+SafetyModule boot
+SensorsModule boot
+PowerModule boot
+DiagnosticsModule boot
+CommsModule boot
+LoggerModule boot
+Core boot
+
+
+НОВИЙ MRO:
+
+(
+Robot3,
+SafetyModule,
+SensorsModule,
+PowerModule,
+DiagnosticsModule,
+CommsModule,
+LoggerModule,
+Core,
+object
+)
+
