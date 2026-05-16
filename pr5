@@ -1,0 +1,134 @@
+
+# АБСТРАКТНИЙ КЛАС
+
+class PaymentMethod(ABC):
+
+    # Абстрактний метод оплати
+    @abstractmethod
+    def pay(self, amount):
+        pass
+
+    # Абстрактний метод повернення коштів
+    @abstractmethod
+    def refund(self, amount):
+        pass
+
+    # Звичайний метод
+    def log_transaction(self, amount):
+        print(f"[LOG] Проведена транзакція на суму {amount} грн")
+
+
+# ОПЛАТА КРЕДИТНОЮ КАРТКОЮ
+
+
+class CreditCardPayment(PaymentMethod):
+
+    def __init__(self, card_number):
+        self.card_number = card_number
+
+    def pay(self, amount):
+        hidden_card = "****" + self.card_number[-4:]
+
+        print(f"Оплата {amount} грн з кредитної картки {hidden_card}")
+
+        self.log_transaction(amount)
+
+    def refund(self, amount):
+        hidden_card = "****" + self.card_number[-4:]
+
+        print(f"Повернення {amount} грн на картку {hidden_card}")
+
+
+
+# ОПЛАТА ЧЕРЕЗ PAYPAL
+
+class PayPalPayment(PaymentMethod):
+
+    def __init__(self, email):
+        self.email = email
+
+    def pay(self, amount):
+        print(f"Оплата {amount} грн через PayPal акаунт {self.email}")
+
+        self.log_transaction(amount)
+
+    def refund(self, amount):
+        print(f"Повернення {amount} грн на PayPal акаунт {self.email}")
+
+
+
+# ОПЛАТА КРИПТОВАЛЮТОЮ
+
+class CryptoPayment(PaymentMethod):
+
+    def __init__(self, wallet_address):
+        self.wallet_address = wallet_address
+
+    def pay(self, amount):
+        short_wallet = self.wallet_address[:6] + "..."
+
+        print(f"Оплата {amount} грн криптовалютою з гаманця {short_wallet}")
+
+        self.log_transaction(amount)
+
+    def refund(self, amount):
+        print("Повернення коштів для криптовалюти неможливе")
+
+
+
+# ГОЛОВНА ПРОГРАМА
+
+
+payments = [
+
+    CreditCardPayment("1234567812345678"),
+
+    PayPalPayment("user@gmail.com"),
+
+    CryptoPayment("0xA1B2C3D4E5F67890")
+]
+
+
+
+# ВИКЛИК МЕТОДУ pay()
+
+print("===== ОПЛАТА =====\n")
+
+for payment in payments:
+    payment.pay(100)
+    print()
+
+
+# ВИКЛИК МЕТОДУ refund()
+
+
+print("===== ПОВЕРНЕННЯ КОШТІВ =====\n")
+
+for payment in payments:
+    payment.refund(50)
+    print()
+
+
+# ПРИКЛАД РЕЗУЛЬТАТУ
+
+
+"""
+ОПЛАТА
+
+Оплата 100 грн з кредитної картки ****5678
+[LOG] Проведена транзакція на суму 100 грн
+
+Оплата 100 грн через PayPal акаунт user@gmail.com
+[LOG] Проведена транзакція на суму 100 грн
+
+Оплата 100 грн криптовалютою з гаманця 0xA1B2...
+[LOG] Проведена транзакція на суму 100 грн
+
+ПОВЕРНЕННЯ КОШТІВ 
+
+Повернення 50 грн на картку ****5678
+
+Повернення 50 грн на PayPal акаунт user@gmail.com
+
+Повернення коштів для криптовалюти неможливе
+"""
