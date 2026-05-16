@@ -1,0 +1,151 @@
+# =========================================
+# КЛАС 1 — Студент
+# =========================================
+
+class Student:
+    total_students = 0  # статичний атрибут
+
+    def __init__(self, name):
+        self.name = name
+        self.teacher = None          # один-до-одного
+        self.courses = []            # багато-до-багатьох
+
+        Student.total_students += 1
+
+    # метод екземпляра
+    def assign_teacher(self, teacher):
+        self.teacher = teacher
+        teacher.student = self
+
+    # метод екземпляра
+    def enroll_course(self, course):
+        if course not in self.courses:
+            self.courses.append(course)
+            course.students.append(self)
+
+    # статичний метод
+    @staticmethod
+    def show_total_students():
+        print(f"Всього студентів: {Student.total_students}")
+
+
+# =========================================
+# КЛАС 2 — Викладач
+# =========================================
+
+class Teacher:
+    total_teachers = 0  # статичний атрибут
+
+    def __init__(self, name):
+        self.name = name
+        self.student = None          # один-до-одного
+        self.courses = []            # один-до-багатьох
+
+        Teacher.total_teachers += 1
+
+    # метод екземпляра
+    def add_course(self, course):
+        if course not in self.courses:
+            self.courses.append(course)
+            course.teacher = self
+
+    # метод екземпляра
+    def change_course_name(self, course, new_name):
+        course.name = new_name
+
+    # статичний метод
+    @staticmethod
+    def show_total_teachers():
+        print(f"Всього викладачів: {Teacher.total_teachers}")
+
+
+# =========================================
+# КЛАС 3 — Курс
+# =========================================
+
+class Course:
+    total_courses = 0  # статичний атрибут
+
+    def __init__(self, name):
+        self.name = name
+        self.teacher = None          # один-до-багатьох
+        self.students = []           # багато-до-багатьох
+
+        Course.total_courses += 1
+
+    # метод екземпляра
+    def add_student(self, student):
+        if student not in self.students:
+            self.students.append(student)
+            student.courses.append(self)
+
+    # метод екземпляра
+    def show_students(self):
+        print(f"\nСтуденти курсу '{self.name}':")
+        for student in self.students:
+            print(student.name)
+
+    # статичний метод
+    @staticmethod
+    def show_total_courses():
+        print(f"Всього курсів: {Course.total_courses}")
+
+
+# =========================================
+# ГОЛОВНА ПРОГРАМА
+# =========================================
+
+# створення об'єктів
+student1 = Student("Іван")
+student2 = Student("Олена")
+
+teacher1 = Teacher("Петренко")
+
+course1 = Course("Python")
+course2 = Course("Бази даних")
+
+# -----------------------------------------
+# ОДИН-ДО-ОДНОГО
+# студент ↔ викладач
+# -----------------------------------------
+student1.assign_teacher(teacher1)
+
+# -----------------------------------------
+# ОДИН-ДО-БАГАТЬОХ
+# викладач → курси
+# -----------------------------------------
+teacher1.add_course(course1)
+teacher1.add_course(course2)
+
+# -----------------------------------------
+# БАГАТО-ДО-БАГАТЬОХ
+# студенти ↔ курси
+# -----------------------------------------
+student1.enroll_course(course1)
+student1.enroll_course(course2)
+
+student2.enroll_course(course1)
+
+# -----------------------------------------
+# Вивід інформації
+# -----------------------------------------
+
+print("Студент:", student1.name)
+print("Його викладач:", student1.teacher.name)
+
+print("\nКурси викладача:")
+for c in teacher1.courses:
+    print(c.name)
+
+course1.show_students()
+
+# зміна атрибута іншого класу
+teacher1.change_course_name(course1, "Advanced Python")
+
+print("\nНова назва курсу:", course1.name)
+
+# статичні методи
+print()
+Student.show_total_students()
+Teacher.show_total_teachers()
+Course.show_total_courses()
